@@ -21,6 +21,7 @@ def home():
 
 @app.route("/ocr", methods=["POST"])
 def ocr():
+    """根据给定图片ocr图片内容"""
     data = json.loads(request.data)
     base64_img = data['data']
     binary_img = base64.b64decode(base64_img)
@@ -39,6 +40,7 @@ def ocr():
 
 @app.route("/stitching", methods=["POST"])
 def stitching():
+    """将图片拼接到指定的图片集合中去"""
     data = json.loads(request.data)
     base64_img = data['data']
     picture_set = data['set']
@@ -72,6 +74,7 @@ def stitching():
 
 @app.route("/detect", methods=["POST"])
 def detect():
+    """在给定的图片集合中找指定的图片位置"""
     data = json.loads(request.data)
     picture_set = data['set']
     base64_img = data['data']
@@ -104,6 +107,7 @@ def detect():
 
 
 def img_pixel():
+    """ 根据图片和指定点的位置，返回该点的rgb """
     data = json.loads(request.data)
     base64_img = data['data']
     binary_img = base64.b64decode(base64_img)
@@ -118,6 +122,7 @@ def img_pixel():
 
 
 def rgb_detect():
+    """找图片颜色的坐标"""
     data = json.loads(request.data)
     base64_img = data['data']
     binary_img = base64.b64decode(base64_img)
