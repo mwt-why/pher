@@ -22,10 +22,10 @@ def home():
 @app.route("/ocr", methods=["POST"])
 def ocr():
     data = json.loads(request.data)
-    img = data['data']
-    img = base64.b64decode(img)
+    base64_img = data['data']
+    binary_img = base64.b64decode(base64_img)
 
-    ocr_results = paddle_ocr.ocr(img, cls=True)
+    ocr_results = paddle_ocr.ocr(binary_img, cls=True)
     response = []
     for orc_result in ocr_results:
         label = orc_result[1][0]
@@ -40,11 +40,11 @@ def ocr():
 @app.route("/stitching", methods=["POST"])
 def stitching():
     data = json.loads(request.data)
-    img = data['data']
+    base64_img = data['data']
     picture_set = data['set']
     # 打开准备添加图片
-    img = base64.b64decode(img)
-    img = Image.open(BytesIO(img))
+    binary_img = base64.b64decode(base64_img)
+    img = Image.open(BytesIO(binary_img))
     img_width, img_height = img.size
 
     # 打开之前的图片
@@ -74,10 +74,10 @@ def stitching():
 def detect():
     data = json.loads(request.data)
     picture_set = data['set']
-    img = data['data']
+    base64_img = data['data']
     # 转byte
-    img = base64.b64decode(img)
-    img = np.frombuffer(img, np.uint8)
+    binary_img = base64.b64decode(base64_img)
+    img = np.frombuffer(binary_img, np.uint8)
     template = cv.imdecode(img, 0)
     w, h = template.shape[::-1]
 
@@ -101,6 +101,39 @@ def detect():
         bottom_right = (top_left[0] + w, top_left[1] + h)
         print(top_left[1], bottom_right[1])
         return jsonify({"top": top_left[1], "bottom": bottom_right[1]})
+
+
+def img_pixel():
+    data = json.loads(request.data)
+    base64_img = data['data']
+    binary_img = base64.b64decode(base64_img)
+    memory_stream = BytesIO(binary_img)
+    img = Image.open(memory_stream)
+    img = img.convert("RGB")
+
+    position = data['position']
+    r, g, b = img.getpixel((position['x'], position['y']))
+    print(f"Color at ({position['x']}, {position['y']}): R={r}, G={g}, B={b}")
+    return jsonify({"R": r, "G": g, "B": b})
+
+
+def rgb_detect():
+    data = json.loads(request.data)
+    base64_img = data['data']
+    binary_img = base64.b64decode(base64_img)
+    memory_stream = BytesIO(binary_img)
+    img = Image.open(memory_stream)
+    img = img.convert("RGB")
+
+    rgb = data['RGB']
+    position_list = []
+    for x in range(img.width):
+        for y in range(img.height):
+            r, g, b = img.getpixel((x, y))
+            if r == rgb['R'] and g == rgb['G'] and b == rgb['B']:
+                print(f"Found at ({x}, {y})")
+                position_list.append({"x": x, "y": y})
+    return jsonify(position_list)
 
 
 if __name__ == '__main__':
